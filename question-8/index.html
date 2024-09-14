@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminder Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        input, button {
+            font-size: 16px;
+            margin: 5px 0;
+            padding: 10px;
+            width: calc(100% - 22px);
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background: #007BFF;
+            color: #fff;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .edit-btn, .delete-btn {
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 5px 10px;
+            margin-left: 5px;
+        }
+        .delete-btn {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reminder Manager</h1>
+        <input type="text" id="reminderText" placeholder="Enter reminder details">
+        <input type="datetime-local" id="reminderTime">
+        <button id="addReminder">Add Reminder</button>
+        <ul id="reminderList"></ul>
+    </div>
+    <script>
+        const reminders = {};
+        const reminderList = document.getElementById('reminderList');
+        const addReminderBtn = document.getElementById('addReminder');
+
+        function updateReminderList() {
+            reminderList.innerHTML = '';
+            Object.keys(reminders).forEach(id => {
+                const reminder = reminders[id];
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    ${reminder.text} at ${reminder.time}
+                    <button class="edit-btn" onclick="editReminder('${id}')">Edit</button>
+                    <button class="delete-btn" onclick="deleteReminder('${id}')">Delete</button>
+                `;
+                reminderList.appendChild(listItem);
+            });
+        }
+
+        function addReminder() {
+            const text = document.getElementById('reminderText').value;
+            const time = document.getElementById('reminderTime').value;
+            const id = Date.now().toString();
+
+            if (text && time) {
+                const reminderTime = new Date(time).getTime();
+                const now = Date.now();
+                const timeout = reminderTime - now;
+
+                if (timeout > 0) {
+                    reminders[id] = { text, time, timeoutId: setTimeout(() => {
+                        alert(`Reminder: ${text}`);
+                        deleteReminder(id);
+                    }, timeout) };
+                    updateReminderList();
+                } else {
+                    alert('Reminder time must be in the future.');
+                }
+            } else {
+                alert('Please enter both details and time.');
+            }
+        }
+
+        function editReminder(id) {
+            const newText = prompt('Enter new reminder text:', reminders[id].text);
+            const newTime = prompt('Enter new reminder time (YYYY-MM-DDTHH:MM):', reminders[id].time);
+
+            if (newText && newTime) {
+                clearTimeout(reminders[id].timeoutId);
+
+                const reminderTime = new Date(newTime).getTime();
+                const now = Date.now();
+                const timeout = reminderTime - now;
+
+                if (timeout > 0) {
+                    reminders[id] = { text: newText, time: newTime, timeoutId: setTimeout(() => {
+                        alert(`Reminder: ${newText}`);
+                        deleteReminder(id);
+                    }, timeout) };
+                    updateReminderList();
+                } else {
+                    alert('Reminder time must be in the future.');
+                }
+            } else {
+                alert('Please enter both details and time.');
+            }
+        }
+
+        function deleteReminder(id) {
+            clearTimeout(reminders[id].timeoutId);
+            delete reminders[id];
+            updateReminderList();
+        }
+
+        addReminderBtn.addEventListener('click', addReminder);
+
+        setInterval(() => {
+            updateReminderList();
+        }, 10000); // Update list every 10 seconds
+    </script>
+</body>
+</html>
